@@ -1,6 +1,8 @@
 package com.corinto.libraryapi.service.impl;
 
+import com.corinto.libraryapi.api.dto.LoanFilterDTO;
 import com.corinto.libraryapi.exception.BusinessException;
+import com.corinto.libraryapi.model.entity.Book;
 import com.corinto.libraryapi.model.entity.Loan;
 import com.corinto.libraryapi.model.repository.LoanRepository;
 import com.corinto.libraryapi.service.LoanService;
@@ -12,7 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-//@Service
+@Service
 public class LoanServiceImpl implements LoanService {
 
     private LoanRepository repository;
@@ -23,9 +25,36 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     public Loan save(Loan loan ) {
-       // if( repository.existsByBookAndNotReturned(loan.getBook()) ){
-         //   throw new BusinessException("Book already loaned");
-        //}
+        if( repository.existsByBookAndNotReturned(loan.getBook()) ){
+            throw new BusinessException("Book already loaned");
+        }
         return repository.save(loan);
+    }
+
+    @Override
+    public Optional<Loan> getById(Long id) {
+        return repository.findById(id);
+    }
+
+    @Override
+    public Loan update(Loan loan) {
+        return repository.save(loan);
+    }
+
+    @Override
+    public Page<Loan> find(LoanFilterDTO filterDTO, Pageable pageable) {
+        return repository.findByBookIsbnOrCustomer( filterDTO.getIsbn(), filterDTO.getCustomer(), pageable );
+    }
+
+    @Override
+    public Page<Loan> getLoansByBook(Book book, Pageable pageable) {
+       return repository.findByBook(book, pageable);
+    }
+
+    @Override
+    public List<Loan> getAllLateLoans() {
+        final Integer loanDays = 4;
+        LocalDate threeDaysAgo = LocalDate.now().minusDays(loanDays);
+        return repository.findByLoanDateLessThanAndNotReturned(threeDaysAgo);
     }
 }

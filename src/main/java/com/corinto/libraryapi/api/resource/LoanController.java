@@ -1,7 +1,10 @@
 package com.corinto.libraryapi.api.resource;
 
 
+import com.corinto.libraryapi.api.dto.BookDTO;
 import com.corinto.libraryapi.api.dto.LoanDTO;
+import com.corinto.libraryapi.api.dto.LoanFilterDTO;
+import com.corinto.libraryapi.api.dto.ReturnedLoanDTO;
 import com.corinto.libraryapi.model.entity.Book;
 import com.corinto.libraryapi.model.entity.Loan;
 import com.corinto.libraryapi.service.BookService;
@@ -46,6 +49,31 @@ public class LoanController {
         return entity.getId();
     }
 
+    @PatchMapping("{id}")
+    public void returnBook(
+            @PathVariable Long id,
+            @RequestBody ReturnedLoanDTO dto) {
+        Loan loan = service.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        loan.setReturned(dto.getReturned());
+        service.update(loan);
+    }
 
+    @GetMapping
+    public Page<LoanDTO> find(LoanFilterDTO dto, Pageable pageRequest) {
+        Page<Loan> result = service.find(dto, pageRequest);
+        List<LoanDTO> loans = result
+                .getContent()
+                .stream()
+                .map(entity -> {
 
+                    Book book = entity.getBook();
+                    BookDTO bookDTO = modelMapper.map(book, BookDTO.class);
+                    LoanDTO loanDTO = modelMapper.map(entity, LoanDTO.class);
+                    loanDTO.setBook(bookDTO);
+                    return loanDTO;
+
+                }).collect(Collectors.toList());
+        return new PageImpl<LoanDTO>(loans, pageRequest, result.getTotalElements());
+
+    }
 }

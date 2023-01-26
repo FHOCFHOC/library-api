@@ -1,14 +1,17 @@
 package com.corinto.libraryapi.api.resource;
 
 import com.corinto.libraryapi.api.dto.BookDTO;
+import com.corinto.libraryapi.api.dto.LoanDTO;
 import com.corinto.libraryapi.api.exception.ApiErros;
 import com.corinto.libraryapi.exception.BusinessException;
 import com.corinto.libraryapi.model.entity.Book;
+import com.corinto.libraryapi.model.entity.Loan;
 import com.corinto.libraryapi.service.BookService;
 //import io.swagger.annotations.Api;
 //import io.swagger.annotations.ApiOperation;
 //import io.swagger.annotations.ApiResponse;
 //import io.swagger.annotations.ApiResponses;
+import com.corinto.libraryapi.service.LoanService;
 import lombok.RequiredArgsConstructor;
 //import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -37,6 +40,8 @@ public class BookController {
 
     private final BookService service;
     private final ModelMapper modelMapper;
+    private final LoanService loanService;
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -92,6 +97,22 @@ public class BookController {
                 .collect(Collectors.toList());
 
         return new PageImpl<BookDTO>( list, pageRequest, result.getTotalElements() );
+    }
+
+    @GetMapping("{id}/loans")
+    public Page<LoanDTO> loansByBook(@PathVariable Long id, Pageable pageable ){
+        Book book = service.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Page<Loan> result = loanService.getLoansByBook(book, pageable);
+        List<LoanDTO> list = result.getContent()
+                .stream()
+                .map(loan -> {
+                    Book loanBook = loan.getBook();
+                    BookDTO bookDTO = modelMapper.map(loanBook, BookDTO.class);
+                    LoanDTO loanDTO = modelMapper.map(loan, LoanDTO.class);
+                    loanDTO.setBook(bookDTO);
+                    return loanDTO;
+                }).collect(Collectors.toList());
+        return new PageImpl<LoanDTO>(list, pageable, result.getTotalElements());
     }
 
 }
