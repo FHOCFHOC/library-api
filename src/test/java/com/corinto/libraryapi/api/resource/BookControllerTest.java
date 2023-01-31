@@ -4,6 +4,7 @@ import com.corinto.libraryapi.api.dto.BookDTO;
 import com.corinto.libraryapi.exception.BusinessException;
 import com.corinto.libraryapi.model.entity.Book;
 import com.corinto.libraryapi.service.BookService;
+import com.corinto.libraryapi.service.LoanService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +40,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = BookController.class)
 @AutoConfigureMockMvc
 public class BookControllerTest {
-
     static String BOOK_API = "/api/books";
 
     @Autowired
@@ -48,18 +48,18 @@ public class BookControllerTest {
     @MockBean
     BookService service;
 
+    @MockBean
+    LoanService loanService;
 
     @Test
     @DisplayName("Deve criar um livro com sucesso.")
-    public void createBookTest() throws Exception{
+    public void createBookTest() throws Exception {
 
-        BookDTO dto = BookDTO.builder().author("beavis").title("As aventuras").isbn("001").build();
-        Book savedBook = Book.builder().id(10l).author("beavis").title("As aventuras").isbn("001").build();
+        BookDTO dto = createNewBook();
+        Book savedBook = Book.builder().id(10l).author("Artur").title("As aventuras").isbn("001").build();
 
         BDDMockito.given(service.save(Mockito.any(Book.class))).willReturn(savedBook);
-
         String json = new ObjectMapper().writeValueAsString(dto);
-
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .post(BOOK_API)
@@ -74,7 +74,9 @@ public class BookControllerTest {
                 .andExpect( jsonPath("title").value(dto.getTitle()) )
                 .andExpect( jsonPath("author").value(dto.getAuthor()) )
                 .andExpect( jsonPath("isbn").value(dto.getIsbn()) )
+
         ;
+
     }
 
     @Test
@@ -196,7 +198,7 @@ public class BookControllerTest {
 
         Book updatingBook = Book.builder().id(1l).title("some title").author("some author").isbn("321").build();
         BDDMockito.given( service.getById(id) ).willReturn( Optional.of(updatingBook) );
-        Book updatedBook = Book.builder().id(id).author("beavis").title("As aventuras").isbn("321").build();
+        Book updatedBook = Book.builder().id(id).author("Artur").title("As aventuras").isbn("321").build();
         BDDMockito.given(service.update(updatingBook)).willReturn(updatedBook);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
@@ -264,9 +266,7 @@ public class BookControllerTest {
         ;
     }
 
-
     private BookDTO createNewBook() {
-        return BookDTO.builder().author("beavis").title("As aventuras").isbn("001").build();
+        return BookDTO.builder().author("Artur").title("As aventuras").isbn("001").build();
     }
-
 }

@@ -16,7 +16,6 @@ import java.util.Optional;
 
 @Service
 public class LoanServiceImpl implements LoanService {
-
     private LoanRepository repository;
 
     public LoanServiceImpl(LoanRepository repository) {
@@ -24,7 +23,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    public Loan save(Loan loan ) {
+    public Loan save( Loan loan ) {
         if( repository.existsByBookAndNotReturned(loan.getBook()) ){
             throw new BusinessException("Book already loaned");
         }
@@ -48,7 +47,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     public Page<Loan> getLoansByBook(Book book, Pageable pageable) {
-       return repository.findByBook(book, pageable);
+        return repository.findByBook(book, pageable);
     }
 
     @Override
